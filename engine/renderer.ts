@@ -1,3 +1,4 @@
+import { mat4 } from "gl-matrix";
 import { Entity } from "./entity.js";
 import { World } from "./world.js";
 
@@ -20,6 +21,11 @@ export class Renderer {
         await renderer.InitWebGPU();
 
         return renderer;
+    }
+
+    private GetProjectionMatrix() {
+        const canvas = this._context.canvas;
+        return mat4.perspective(mat4.create(), 1.5, canvas.width/canvas.height, 0.1, 100);
     }
 
     private async InitWebGPU() {
@@ -97,6 +103,9 @@ export class Renderer {
         if (!entity.transform || !entity.model?.mesh)
             return;
 
+        // TODO get into shader
+        const modelMatrix = entity.transform.GetTransformMatrix();
+
         const vertexBuffer = this._device.createBuffer({
             label: entity.name,
             size: entity.model.mesh.vertices.byteLength,
@@ -118,6 +127,10 @@ export class Renderer {
     }
 
     RenderFrame(world: World) {
+
+        // TODO get into shader
+        const viewMatrix = world.camera.GetViewMatrix();
+        const projectionMatrix = this.GetProjectionMatrix();
 
         this._encoder = this._device.createCommandEncoder();
         const pass = this._encoder.beginRenderPass({
