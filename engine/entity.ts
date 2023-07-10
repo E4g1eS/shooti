@@ -3,23 +3,16 @@ import { Model } from "./drawable";
 
 export class Transform {
     position = vec3.create();
-    rotation = quat.create();
-    scale = vec3.create();
-
-    GetTranslationMatrix() {
-        return mat4.translation(this.position);
-    }
-
-    GetRotationMatrix() {
-        return mat4.fromQuat(this.rotation);
-    }
-
-    GetScaleMatrix() {
-        return mat4.scaling(this.scale);
-    }
+    rotation = quat.identity();
+    scale = vec3.create(1, 1, 1);
 
     GetModelMatrix() {
-        return mat4.mul(this.GetTranslationMatrix(), mat4.mul(this.GetRotationMatrix(), this.GetScaleMatrix()));
+        const identity = mat4.identity();
+        const scaled = mat4.scale(identity, this.scale);
+        const axisAngle = quat.toAxisAngle(this.rotation);
+        const rotated = mat4.rotate(scaled, axisAngle.axis, axisAngle.angle);
+        const translated = mat4.translate(rotated, this.position);
+        return translated;
     }
 };
 

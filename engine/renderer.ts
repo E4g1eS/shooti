@@ -4,14 +4,14 @@ import { Entity } from "./entity.js";
 import { World } from "./world.js";
 
 const FOV = 1.5;
-const MAT4_SIZE = 4*4*32;
+const MAT4_SIZE = 4 * 4 * 32;
 
 function GetProjectionMatrix(canvas: HTMLCanvasElement | OffscreenCanvas) {
     return mat4.perspective(FOV, canvas.width / canvas.height, 0.1, 100);
 }
 
 interface Pipeline {
-    Render(world: World, entities: Entity[]): void;
+    Render(pass: GPURenderPassEncoder, world: World, entities: Entity[]): void;
 }
 
 class DefaultPipeline implements Pipeline {
@@ -19,6 +19,8 @@ class DefaultPipeline implements Pipeline {
     private _context: GPUCanvasContext;
     private _device: GPUDevice;
     private _gpuPipeline!: GPURenderPipeline;
+
+    private _matrixUniformsBindGroupLayout: GPUBindGroupLayout;
 
     private _projectionBuffer: GPUBuffer;
     private _viewBuffer: GPUBuffer;
@@ -33,9 +35,42 @@ class DefaultPipeline implements Pipeline {
             code: shaderText,
         });
 
+        this._matrixUniformsBindGroupLayout = this._device.createBindGroupLayout({
+            label: "Bind group layout",
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform"
+                    }
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform"
+                    }
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.VERTEX,
+                    buffer: {
+                        type: "uniform"
+                    }
+                },
+            ]
+        });
+
+        const pipelineLayout = this._device.createPipelineLayout({
+            bindGroupLayouts: [
+                this._matrixUniformsBindGroupLayout, // @group(0)
+            ]
+        });
+
         this._gpuPipeline = this._device.createRenderPipeline({
             label: "Render pipeline",
-            layout: "auto", // What types of input the pipeline needs
+            layout: pipelineLayout, // What types of input the pipeline needs
 
             vertex: {
                 module: shaderModule,
@@ -94,6 +129,26 @@ class DefaultPipeline implements Pipeline {
         const modelMatrix = entity.transform.GetModelMatrix();
         this._device.queue.writeBuffer(this._modelBuffer, 0, modelMatrix);
 
+        const matrixUniformsBindGroup = this._device.createBindGroup({
+            layout: this._matrixUniformsBindGroupLayout,
+            entries: [
+                {
+                    binding: 0,
+                    resource: { buffer: this._projectionBuffer }
+                },
+                {
+                    binding: 1,
+                    resource: { buffer: this._viewBuffer }
+                },
+                {
+                    binding: 2,
+                    resource: { buffer: this._modelBuffer }
+                }
+            ]
+        });
+
+        pass.setBindGroup(0, matrixUniformsBindGroup);
+
         const vertexBuffer = this._device.createBuffer({
             label: entity.name,
             size: entity.model.mesh.vertices.byteLength,
@@ -114,22 +169,7 @@ class DefaultPipeline implements Pipeline {
         pass.drawIndexed(entity.model.mesh.indices.length);
     }
 
-    Render(world: World, entities: Entity[]) {
-        const encoder = this._device.createCommandEncoder({});
-        const pass = encoder.beginRenderPass({
-            colorAttachments: [{
-                view: this._context.getCurrentTexture().createView(),
-                loadOp: "clear",
-                clearValue: {
-                    r: 0.3,
-                    g: 0.3,
-                    b: 0.3,
-                    a: 1,
-                },
-                storeOp: "store",
-            }],
-        });
-
+    Render(pass: GPURenderPassEncoder, world: World, entities: Entity[]) {
         const projectionMatrix = GetProjectionMatrix(this._context.canvas);
         this._device.queue.writeBuffer(this._projectionBuffer, 0, projectionMatrix);
 
@@ -141,10 +181,6 @@ class DefaultPipeline implements Pipeline {
         for (const entity of entities) {
             this.RenderEntity(entity, pass);
         }
-
-        pass.end();
-        const commandBuffer = encoder.finish();
-        this._device.queue.submit([commandBuffer]);
     }
 }
 
@@ -199,6 +235,25 @@ export class Renderer {
     }
 
     RenderFrame(world: World) {
-        this._pipeline.Render(world, world.entities);
+        const encoder = this._device.createCommandEncoder({});
+        const pass = encoder.beginRenderPass({
+            colorAttachments: [{
+                view: this._context.getCurrentTexture().createView(),
+                loadOp: "clear",
+                clearValue: {
+                    r: 0.3,
+                    g: 0.3,
+                    b: 0.3,
+                    a: 1,
+                },
+                storeOp: "store",
+            }],
+        });
+
+        this._pipeline.Render(pass, world, world.entities);
+
+        pass.end();
+        const commandBuffer = encoder.finish();
+        this._device.queue.submit([commandBuffer]);
     }
 };

@@ -25,6 +25,10 @@ function Main() {
 
     CanvasResize();
 
+    canvas.addEventListener("click", async () => {
+        canvas.requestPointerLock();
+    });
+
     game = new Game(context);
 }
 
