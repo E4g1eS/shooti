@@ -1,4 +1,4 @@
-import { vec3, mat4 } from "gl-matrix";
+import { vec3, mat4 } from "wgpu-matrix";
 import { Entity, Transform } from "./entity.js";
 
 export class Camera extends Entity {
@@ -9,7 +9,7 @@ export class Camera extends Entity {
     }
 
     GetViewMatrix() {
-        const center = vec3.transformQuat(vec3.create(), this.transform!.position, this.transform!.rotation);
-        return mat4.lookAt(mat4.create(), this.transform!.position, center, vec3.fromValues(0, 1, 0));
+        const target = vec3.transformQuat(vec3.create(), this.transform!.rotation);
+        return mat4.lookAt(this.transform!.position, target, vec3.create(0, 1, 0));
     }
 }
