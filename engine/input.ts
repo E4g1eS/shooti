@@ -18,7 +18,7 @@ export class Input {
                 return;
 
             event.preventDefault();
-            this.PressedKey(event.code, performance.now())
+            this.PressedKey(event.code)
         });
 
         canvas.addEventListener("keyup", (event) => {
@@ -26,7 +26,7 @@ export class Input {
                 return;
 
             event.preventDefault();
-            this.ReleasedKey(event.code, performance.now());
+            this.ReleasedKey(event.code);
         });
 
         document.addEventListener("mousemove", (event) => {
@@ -35,16 +35,15 @@ export class Input {
         });
     }
 
-    GetMouseMovement(reset: boolean = true) {
-        const movement = this._mouseMovement;
-
-        if (reset)
-            this._mouseMovement = vec2.create();
+    GetMouseMovement() {
+        const movement = vec2.copy(this._mouseMovement);
+        
+        this._mouseMovement = vec2.create();
 
         return movement;
     }
 
-    GetKeyTime(keyCode: string, reset: boolean = true) {
+    GetKeyTime(keyCode: string) {
         let pressTime = 0;
 
         const currentlyPressed = this._currentlyPressed.get(keyCode);
@@ -52,8 +51,7 @@ export class Input {
             const now = performance.now();
             pressTime += now - currentlyPressed;
             
-            if (reset)
-                this._currentlyPressed.set(keyCode, now);
+            this._currentlyPressed.set(keyCode, now);
         }
 
         const value = this._memory.get(keyCode);
@@ -61,30 +59,31 @@ export class Input {
             return pressTime;
 
         pressTime += value;
-
-        if (reset)
-            this._memory.delete(keyCode);
+        
+        this._memory.delete(keyCode);
         
         return pressTime;
     }
 
-    private PressedKey(code: string, timestamp: number) {
-        this._currentlyPressed.set(code, timestamp);
+    private PressedKey(keyCode: string) {
+        this._currentlyPressed.set(keyCode, performance.now());
     }
 
-    private ReleasedKey(code: string, timestamp: number) {
-        const pressedAt = this._currentlyPressed.get(code);
+    private ReleasedKey(keyCode: string) {
+        const pressedAt = this._currentlyPressed.get(keyCode);
 
         if (!pressedAt)
             return false;
 
-        let sum = this._memory.get(code);
+        this._currentlyPressed.delete(keyCode);
 
+        let sum = this._memory.get(keyCode);
         if (!sum)
             sum = 0;
 
-        sum += timestamp - pressedAt;
-        this._memory.set(code, sum);
+        sum += performance.now() - pressedAt;
+        this._memory.set(keyCode, sum);
+
         return true;
     }
 }
