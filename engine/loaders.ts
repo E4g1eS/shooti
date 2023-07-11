@@ -1,4 +1,4 @@
-import { Mesh } from "./drawable.js";
+import { Mesh, Model } from "./drawable.js";
 
 export class SimpleLoader {
     LoadCube() {
@@ -64,17 +64,68 @@ export class SimpleLoader {
     }
 }
 
-class InvalidObjFile extends Error {
+export class InvalidObjFile extends Error {
     constructor() {
         super("Obj file is invalid!");
     }
 }
 
-class ObjFileData {
+class ObjFile {
     vertices = new Array<number>();
-    normals = new Array<number>();
     textureCoords = new Array<number>();
+    normals = new Array<number>();
     indices = new Array<Array<number>>();
+
+    /** Start offset is multiplied by count. */
+    private PushNumbers(from: number[], to: number[], startOffset: number, count: number) {
+        for (let i = 0; i < count; i++) {
+            to.push(from[startOffset * count + i])
+        }
+    }
+
+    ContructModel() {
+        const result = new Model();
+
+        if (this.indices.length % 3 !== 0)
+            throw new InvalidObjFile();
+
+        const alreadyDone = new Map<string, number>();
+
+        const newVertices = new Array<number>();
+        const newTextureCoords = new Array<number>();
+        const newNormals = new Array<number>();
+        const newIndices = new Array<number>();
+
+        for (const indice of this.indices) {
+            const isDone = alreadyDone.get(indice.toString());
+
+            if (isDone) {
+                newIndices.push(isDone);
+                continue;
+            }
+
+            this.PushNumbers(this.vertices, newVertices, indice[0], 3);
+
+            if (this.textureCoords.length !== 0)
+                this.PushNumbers(this.textureCoords, newTextureCoords, indice[1], 2);
+
+            if (this.normals.length !== 0)
+                this.PushNumbers(this.normals, newNormals, indice[2], 3);
+
+            const lastVertexIndex = (newVertices.length / 3) - 1
+            newIndices.push(lastVertexIndex);
+            alreadyDone.set(indice.toString(), lastVertexIndex);
+        }
+
+        result.mesh = new Mesh(
+            new Float32Array(newVertices),
+            new Uint32Array(newIndices),
+            newNormals.length > 0 ? new Float32Array(newNormals) : undefined,
+            newTextureCoords.length > 0 ? new Float32Array(newTextureCoords) : undefined
+        );
+
+        return result;
+    }
 }
 
 enum NumberType {
@@ -129,10 +180,10 @@ export class ObjLoader {
         for (const group of groups) {
             const numStrings = group.split("/");
 
-            if (numStrings.length !== 3)
-                return new InvalidObjFile();
-
             const lastIndex = indices.push(new Array<number>()) - 1;
+
+            if (numStrings.length < 1 || numStrings.length > 3)
+                throw new InvalidObjFile();
 
             for (const numString of numStrings) {
 
@@ -146,7 +197,7 @@ export class ObjLoader {
                 if (isNaN(num))
                     throw new InvalidObjFile();
 
-                indices[lastIndex].push(num);
+                indices[lastIndex].push(num - 1);
             }
         }
     }
@@ -155,25 +206,25 @@ export class ObjLoader {
     async Load(fileName: string) {
         const fileText = await (await fetch("../content/" + fileName)).text();
 
-        const objFileData = new ObjFileData();
+        const objFile = new ObjFile();
 
         for (const line of fileText.split("\n")) {
             const type = this.LineType(line)
             switch (this.LineType(line)) {
                 case "v":
-                    this.AddNumbers(line, objFileData.vertices);
+                    this.AddNumbers(line, objFile.vertices);
                     break;
 
                 case "vn":
-                    this.AddNumbers(line, objFileData.normals);
+                    this.AddNumbers(line, objFile.normals);
                     break;
 
                 case "vt":
-                    this.AddNumbers(line, objFileData.textureCoords);
+                    this.AddNumbers(line, objFile.textureCoords);
                     break;
 
                 case "f":
-                    this.AddIndices(line, objFileData.indices);
+                    this.AddIndices(line, objFile.indices);
 
                 case "#":
                 case "":
@@ -185,11 +236,6 @@ export class ObjLoader {
             }
         }
 
-        console.log(objFileData);
-
-        const verticesArray = new Float32Array(0);
-        const indicesArray = new Uint32Array(0);
-
-        return new Mesh(verticesArray, indicesArray);
+        return objFile.ContructModel();
     }
 };

@@ -26,7 +26,11 @@ export default class Game implements Updatable{
         //const cubeMesh = objLoader.LoadCube();
         
         const objLoader = new ObjLoader();
-        const loadedMesh = objLoader.Load("cube.obj");
+        const loadedCube = await objLoader.Load("cube.obj");
+        //const loadCubeUntextured = await objLoader.Load("cube-untextured.obj");
+
+        console.log(loadedCube);
+        //console.log(loadCubeUntextured);
 
         const model = new Model();
         model.mesh = mesh;
@@ -35,6 +39,10 @@ export default class Game implements Updatable{
         entity.name = "entity";
         entity.transform = new Transform();
         entity.model = model;
+        entity.model = loadedCube;
+        entity.model = await objLoader.Load("suzanne.obj");
+
+        console.log(entity.model);
 
         this.entity = entity;
 
