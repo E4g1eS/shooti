@@ -3,7 +3,7 @@ import { quat, vec2, vec3 } from "wgpu-matrix";
 import { App, Updatable } from "../engine/app.js";
 import { Model } from "../engine/drawable.js";
 import { Entity, Transform } from "../engine/entity.js";
-import { ObjLoader } from "../engine/loaders.js";
+import { ObjLoader, SimpleLoader } from "../engine/loaders.js";
 
 const MOUSE_SENSITIVITY = 0.001;
 const MOVEMENT_SPEED = 0.003;
@@ -21,10 +21,11 @@ export default class Game implements Updatable{
     }
 
     private async InitializeWorld() {
-        const objLoader = new ObjLoader();
-        const mesh = objLoader.LoadCone();
+        const simpleLoader  = new SimpleLoader();
+        const mesh = simpleLoader.LoadCone();
         //const cubeMesh = objLoader.LoadCube();
-
+        
+        const objLoader = new ObjLoader();
         const loadedMesh = objLoader.Load("cube.obj");
 
         const model = new Model();
