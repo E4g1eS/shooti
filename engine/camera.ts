@@ -9,8 +9,11 @@ export class Camera extends Entity {
     }
 
     GetViewMatrix() {
-        const direction = vec3.transformQuat(vec3.create(0, 0, 1), this.transform!.rotation);
-        const target = vec3.add(this.transform!.position, direction);
-        return mat4.lookAt(this.transform!.position, target, vec3.create(0, 1, 0));
+        if (!this.transform)
+            return mat4.identity();
+
+        const direction = vec3.transformQuat(vec3.create(0, 0, -1), this.transform.rotation);
+        const target = vec3.add(this.transform.position, direction);
+        return mat4.lookAt(this.transform.position, target, vec3.create(0, 1, 0));
     }
 }

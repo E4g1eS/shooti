@@ -4,7 +4,7 @@
 
 @vertex
 fn vertexMain(@location(0) pos: vec3f) -> @builtin(position) vec4f {
-    return projectionMatrix * viewMatrix * modelMatrix * vec4f(pos.x, -pos.y, pos.z, 1);
+    return projectionMatrix * viewMatrix * modelMatrix * vec4f(pos.x, pos.y, pos.z, 1);
 }
 
 @fragment

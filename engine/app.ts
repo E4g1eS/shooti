@@ -6,6 +6,10 @@ export interface Updatable {
     Update(): void;
 }
 
+export function Timeout(miliseconds: number) {
+    return new Promise(resolve => {setTimeout(resolve, miliseconds)});
+}
+
 export class App {
 
     world = new World();

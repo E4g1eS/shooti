@@ -7,12 +7,12 @@ export class Transform {
     scale = vec3.create(1, 1, 1);
 
     GetModelMatrix() {
-        const identity = mat4.identity();
-        const scaled = mat4.scale(identity, this.scale);
+        const result = mat4.identity();
+        mat4.scale(result, this.scale, result);
         const axisAngle = quat.toAxisAngle(this.rotation);
-        const rotated = mat4.rotate(scaled, axisAngle.axis, axisAngle.angle);
-        const translated = mat4.translate(rotated, this.position);
-        return translated;
+        mat4.rotate(result, axisAngle.axis, axisAngle.angle, result);
+        mat4.translate(result, this.position, result);
+        return result;
     }
 };
 

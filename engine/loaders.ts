@@ -39,7 +39,7 @@ export class ObjLoader {
         return new Mesh(vertices, indices);
     }
 
-    /** Triangle with 3D leg facing away (+Z), point is up (+Y). */
+    /** Triangle with 3D leg facing +Z, point is up +Y. */
     LoadCone() {
         const vertices = new Float32Array([
             -1, 0, -1, // 0 left, close
@@ -58,6 +58,16 @@ export class ObjLoader {
             // bottom
             0, 2, 3,
         ]);
+
+        return new Mesh(vertices, indices);
+    }
+
+    /** Loads from ../content/ */
+    async Load(name: string) {
+        const fileText = await (await fetch("../content/" + name)).text();
+
+        const vertices = new Float32Array(0);
+        const indices = new Uint32Array(0);
 
         return new Mesh(vertices, indices);
     }
