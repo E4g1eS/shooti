@@ -88,6 +88,8 @@ class DefaultPipeline implements Pipeline {
 
             primitive: {
                 frontFace: "cw",
+                topology: "triangle-list",
+                cullMode: "back",
             },
 
             fragment: {

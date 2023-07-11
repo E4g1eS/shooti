@@ -2,9 +2,15 @@ import { vec3, mat4, quat } from "wgpu-matrix";
 import { Model } from "./drawable";
 
 export class Transform {
-    position = vec3.create();
-    rotation = quat.identity();
-    scale = vec3.create(1, 1, 1);
+    position;
+    rotation;
+    scale;
+
+    constructor(position = vec3.create(), rotation = quat.identity(), scale = vec3.create(1, 1, 1)) {
+        this.position = position;
+        this.rotation = rotation;
+        this.scale = scale;
+    }
 
     GetModelMatrix() {
         const result = mat4.identity();
@@ -17,7 +23,11 @@ export class Transform {
 };
 
 export class Entity {
-    name = "";
+    name;
     transform: Transform | null = null;
     model: Model | null = null;
+
+    constructor(name = "") {
+        this.name = name;
+    }
 };

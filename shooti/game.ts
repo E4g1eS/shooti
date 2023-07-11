@@ -11,7 +11,7 @@ const MOVEMENT_SPEED = 0.003;
 export default class Game implements Updatable{
     app?: App;
 
-    entity?: Entity;
+    suzanne?: Entity;
 
     constructor(context: GPUCanvasContext) {
         App.Initialize(context).then((app) => {
@@ -21,35 +21,25 @@ export default class Game implements Updatable{
     }
 
     private async InitializeWorld() {
-        const simpleLoader  = new SimpleLoader();
-        const mesh = simpleLoader.LoadCone();
-        //const cubeMesh = objLoader.LoadCube();
-        
         const objLoader = new ObjLoader();
-        const loadedCube = await objLoader.Load("cube.obj");
-        //const loadCubeUntextured = await objLoader.Load("cube-untextured.obj");
 
-        console.log(loadedCube);
-        //console.log(loadCubeUntextured);
+        this.suzanne = new Entity("suzanne");
+        this.suzanne.name = "suzanne";
+        this.suzanne.transform = new Transform();
+        this.suzanne.model = await objLoader.Load("suzanne.obj");
 
-        const model = new Model();
-        model.mesh = mesh;
-
-        const entity = new Entity();
-        entity.name = "entity";
-        entity.transform = new Transform();
-        entity.model = model;
-        entity.model = loadedCube;
-        entity.model = await objLoader.Load("suzanne.obj");
-
-        console.log(entity.model);
-
-        this.entity = entity;
-
+        
+        
         if (!this.app)
-            return;
+        return;
+        
+        this.app.world.entities.push(this.suzanne);
 
-        this.app.world.entities.push(entity);
+        const cube = new Entity("cube");
+        cube.transform = new Transform(vec3.create(0, -5, 0));
+        cube.model = await objLoader.Load("cube.obj");
+
+        this.app.world.entities.push(cube);
 
         if (!this.app.world.camera.transform)
             return;
@@ -71,7 +61,7 @@ export default class Game implements Updatable{
         if (!this.app)
             return;
 
-        if (!this.entity?.transform || !this.app.world.camera.transform)
+        if (!this.suzanne?.transform || !this.app.world.camera.transform)
             return;
 
         const mouseMovement = this.app.input.GetMouseMovement();
@@ -90,9 +80,9 @@ export default class Game implements Updatable{
         this.app.world.camera.transform.position = vec3.add(this.app.world.camera.transform.position, vec3.mulScalar(vec3.create(0, 1, 0), upAmount));
 
         if (this.app.input.GetKeyTime("KeyI") !== 0)
-            this.entity.transform.position = vec3.add(this.entity.transform.position, vec3.create(0, 0.1, 0));
+            this.suzanne.transform.position = vec3.add(this.suzanne.transform.position, vec3.create(0, 0.1, 0));
 
         if (this.app.input.GetKeyTime("KeyK") !== 0)
-            this.entity.transform.position = vec3.add(this.entity.transform.position, vec3.create(0, -0.1, 0));
+            this.suzanne.transform.position = vec3.add(this.suzanne.transform.position, vec3.create(0, -0.1, 0));
     }
 };
