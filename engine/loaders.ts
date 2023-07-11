@@ -63,8 +63,8 @@ export class ObjLoader {
     }
 
     /** Loads from ../content/ */
-    async Load(name: string) {
-        const fileText = await (await fetch("../content/" + name)).text();
+    async Load(fileName: string) {
+        const fileText = await (await fetch("../content/" + fileName)).text();
 
         const vertices = new Float32Array(0);
         const indices = new Uint32Array(0);
