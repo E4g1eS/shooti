@@ -1,9 +1,8 @@
 import { quat, vec2, vec3 } from "wgpu-matrix";
 
 import { App, Updatable } from "../engine/app.js";
-import { Model } from "../engine/drawable.js";
 import { Entity, Transform } from "../engine/entity.js";
-import { ObjLoader, SimpleLoader } from "../engine/loaders.js";
+import { ObjLoader } from "../engine/loaders.js";
 
 const MOUSE_SENSITIVITY = 0.001;
 const MOVEMENT_SPEED = 0.003;
