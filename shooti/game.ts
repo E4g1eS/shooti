@@ -8,7 +8,7 @@ import { ObjLoader, SimpleLoader } from "../engine/loaders.js";
 const MOUSE_SENSITIVITY = 0.001;
 const MOVEMENT_SPEED = 0.003;
 
-export default class Game implements Updatable{
+export default class Game implements Updatable {
     app?: App;
 
     suzanne?: Entity;
@@ -28,11 +28,9 @@ export default class Game implements Updatable{
         this.suzanne.transform = new Transform();
         this.suzanne.model = await objLoader.Load("suzanne.obj");
 
-        
-        
         if (!this.app)
-        return;
-        
+            return;
+
         this.app.world.entities.push(this.suzanne);
 
         const cube = new Entity("cube");
@@ -75,7 +73,7 @@ export default class Game implements Updatable{
         const sideDirection = vec3.cross(forwardDirection, vec3.create(0, 1, 0));
         const sideAmount = (this.app.input.GetKeyTime("KeyD") - this.app.input.GetKeyTime("KeyA")) * MOVEMENT_SPEED;
         this.app.world.camera.transform.position = vec3.add(this.app.world.camera.transform.position, vec3.mulScalar(sideDirection, sideAmount));
-        
+
         const upAmount = (this.app.input.GetKeyTime("Space") - this.app.input.GetKeyTime("ShiftLeft")) * MOVEMENT_SPEED;
         this.app.world.camera.transform.position = vec3.add(this.app.world.camera.transform.position, vec3.mulScalar(vec3.create(0, 1, 0), upAmount));
 
